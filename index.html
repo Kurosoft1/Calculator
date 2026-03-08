@@ -1,88 +1,145 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recovery & BackBet Calculator + Screenshot Analyzer</title>
+<title>Football Hedge Analyzer Pro</title>
 
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <style>
-:root{
---bg:#0a0f0d;
---card:#121a16;
---card-border:#1e2e24;
---accent:#2ecc40;
---accent-dim:#1a7a28;
---text:#e8f0ea;
---text-dim:#7a9a82;
---warning:#f39c12;
---danger:#e74c3c;
---input-bg:#0d1410;
-}
 
 body{
 font-family:'DM Sans',sans-serif;
-background:var(--bg);
-color:var(--text);
-min-height:100vh;
+background:#0a0f0d;
+color:#e8f0ea;
 padding:20px;
+animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(10px)}
+to{opacity:1;transform:translateY(0)}
 }
 
 .container{
-max-width:700px;
-margin:0 auto;
+max-width:900px;
+margin:auto;
 }
 
-.section{
-background:var(--card);
-border:1px solid var(--card-border);
-border-radius:12px;
+h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+.card{
+background:#121a16;
 padding:20px;
-margin-bottom:16px;
+border-radius:12px;
+margin-bottom:20px;
+border:1px solid #1e2e24;
+box-shadow:0 5px 25px rgba(0,0,0,0.3);
+transition:transform .2s;
 }
 
-.section-label{
-font-family:'Space Mono',monospace;
-font-size:12px;
-color:var(--text-dim);
-margin-bottom:10px;
-}
-
-input[type="number"],input[type="file"]{
-width:100%;
-background:var(--input-bg);
-border:1px solid var(--card-border);
-border-radius:8px;
-padding:10px;
-color:white;
-margin-bottom:10px;
+.card:hover{
+transform:scale(1.01);
 }
 
 button{
 width:100%;
-background:var(--accent);
-border:none;
 padding:12px;
-font-weight:bold;
+background:#2ecc40;
+border:none;
 border-radius:8px;
+font-weight:bold;
 cursor:pointer;
+transition:.2s;
 }
 
-.result-card{
-border:1px solid var(--card-border);
+button:hover{
+background:#38f050;
+}
+
+input,textarea{
+width:100%;
 padding:10px;
-border-radius:8px;
-margin-top:10px;
+margin-bottom:10px;
+background:#0d1410;
+border:1px solid #1e2e24;
+color:white;
+border-radius:6px;
 }
 
 .match{
-margin-bottom:15px;
-padding:10px;
-border:1px solid var(--card-border);
+border:1px solid #1e2e24;
+padding:14px;
+margin-top:12px;
 border-radius:8px;
+transition:.25s;
+background:#0f1512;
+}
+
+.match:hover{
+transform:scale(1.02);
+}
+
+.best{
+border:2px solid #2ecc40;
+background:#13231a;
+box-shadow:0 0 15px rgba(46,204,64,0.4);
+}
+
+.odds{
+font-family:'Space Mono',monospace;
+}
+
+.loading{
+text-align:center;
+padding:20px;
+font-size:18px;
+}
+
+.spinner{
+border:4px solid rgba(255,255,255,0.1);
+border-left:4px solid #2ecc40;
+border-radius:50%;
+width:30px;
+height:30px;
+animation:spin 1s linear infinite;
+margin:auto;
+margin-bottom:10px;
+}
+
+@keyframes spin{
+0%{transform:rotate(0)}
+100%{transform:rotate(360deg)}
+}
+
+.progressbar{
+width:100%;
+height:6px;
+background:#1e2e24;
+border-radius:10px;
+overflow:hidden;
+margin-top:10px;
+}
+
+.progress{
+height:100%;
+width:0%;
+background:#2ecc40;
+transition:width .4s;
+}
+
+.resultStats{
+margin-top:15px;
+padding:10px;
+background:#101915;
+border-radius:8px;
+font-size:14px;
 }
 
 </style>
@@ -92,35 +149,46 @@ border-radius:8px;
 
 <div class="container">
 
-<h2>Screenshot Hedge Analyzer</h2>
+<h2>⚡ Football Hedge Analyzer Pro</h2>
 
-<div class="section">
+<div class="card">
 
-<div class="section-label">Upload Football Odds Screenshot</div>
+<h3>📸 Upload Odds Screenshot</h3>
 
 <input type="file" id="imageUpload" accept="image/*">
 
 <button onclick="processScreenshot()">Analyse Screenshot</button>
 
-<div id="matchResults"></div>
+<div id="progressArea"></div>
+
+<div id="results"></div>
 
 </div>
 
+<div class="card">
 
-<div class="section">
+<h3>📄 Analyse Bet9ja Page Source</h3>
 
-<div class="section-label">Manual Calculator</div>
+<textarea id="htmlInput" rows="5" placeholder="Paste Bet9ja page HTML"></textarea>
 
-<label>Home Odd</label>
-<input type="number" id="homeOdd" step="0.01">
+<button onclick="analyseHTML()">Analyse HTML</button>
 
-<label>Draw Odd</label>
-<input type="number" id="drawOdd" step="0.01">
+</div>
+
+<div class="card">
+
+<h3>🧮 Manual Hedge Calculator</h3>
+
+<label>Recovery Odd</label>
+<input type="number" id="recOdd">
+
+<label>BackBet Odd</label>
+<input type="number" id="backOdd">
 
 <label>Target Profit</label>
 <input type="number" id="profit" value="1000">
 
-<button onclick="calculate()">Calculate</button>
+<button onclick="manualCalc()">Calculate</button>
 
 <div id="manualResult"></div>
 
@@ -134,107 +202,160 @@ function fmt(n){
 return "₦"+Math.round(n).toLocaleString();
 }
 
-function hedgeCalc(recovery,backbet,profit){
+function hedge(recovery,backbet,profit){
 
 let denom=(backbet-1)*(recovery-1)-1;
-
 if(denom<=0) return null;
 
 let B=profit/denom;
 let R=B*(backbet-1);
 
-return {R,B};
+let total=R+B;
+let returnRec=R*recovery;
+let profitIfWin=returnRec-total;
 
+return {R,B,profitIfWin};
 }
-
 
 async function processScreenshot(){
 
 const file=document.getElementById("imageUpload").files[0];
 
-if(!file){
-alert("Upload screenshot first");
-return;
-}
+if(!file) return alert("Upload screenshot");
 
-document.getElementById("matchResults").innerHTML="Reading screenshot...";
+document.getElementById("progressArea").innerHTML=`
+<div class="loading">
+<div class="spinner"></div>
+Reading screenshot...
+<div class="progressbar"><div class="progress" id="bar"></div></div>
+</div>
+`;
+
+let bar=document.getElementById("bar");
+let percent=0;
+
+let interval=setInterval(()=>{
+percent+=10;
+if(percent>90) percent=90;
+bar.style.width=percent+"%";
+},300);
 
 const result=await Tesseract.recognize(file,"eng");
 
-const text=result.data.text;
+clearInterval(interval);
+bar.style.width="100%";
 
-analyseOdds(text);
+analyseText(result.data.text);
 
 }
 
+function analyseText(text){
 
-function analyseOdds(text){
+const odds=text.match(/\d+\.\d+/g)||[];
+const teams=text.match(/[A-Z]{2,3}\s*-\s*[A-Z]{2,3}/g)||[];
 
-const numbers=text.match(/\d+\.\d+/g);
+let matches=[];
+let bestProfit=0;
+let bestIndex=-1;
 
-let output="";
+for(let i=0;i<odds.length;i+=3){
 
-let profit=1000;
-
-for(let i=0;i<numbers.length;i+=3){
-
-let odds=[
-parseFloat(numbers[i]),
-parseFloat(numbers[i+1]),
-parseFloat(numbers[i+2])
+let o=[
+parseFloat(odds[i]),
+parseFloat(odds[i+1]),
+parseFloat(odds[i+2])
 ];
 
-if(odds.length<3) continue;
+if(o.length<3) continue;
 
-let sorted=[...odds].sort((a,b)=>a-b);
-
+let sorted=[...o].sort((a,b)=>a-b);
 let recovery=sorted[0];
-
 let backbet=sorted[1];
 
-let calc=hedgeCalc(recovery,backbet,profit);
-
+let calc=hedge(recovery,backbet,1000);
 if(!calc) continue;
 
-output+=`
-<div class="match">
+matches.push({
+odds:o,
+team:teams[i/3]||"Match "+(i/3+1),
+recovery,
+backbet,
+calc
+});
 
-<b>Odds:</b> ${odds.join(" | ")}<br>
+if(calc.profitIfWin>bestProfit){
+bestProfit=calc.profitIfWin;
+bestIndex=matches.length-1;
+}
 
-Recovery Odd (lowest): <b>${recovery}</b><br>
-BackBet Odd (second lowest): <b>${backbet}</b><br><br>
+}
 
-Recovery Stake: <b>${fmt(calc.R)}</b><br>
-BackBet Stake: <b>${fmt(calc.B)}</b>
+render(matches,bestIndex);
+
+}
+
+function render(matches,bestIndex){
+
+let html="";
+let totalProfit=0;
+
+matches.forEach((m,i)=>{
+
+let cls=i===bestIndex?"match best":"match";
+totalProfit+=m.calc.profitIfWin;
+
+html+=`
+<div class="${cls}">
+
+<b>⚽ ${m.team}</b><br>
+
+<span class="odds">Odds: ${m.odds.join(" | ")}</span><br><br>
+
+Recovery Odd → <b>${m.recovery}</b><br>
+BackBet Odd → <b>${m.backbet}</b><br><br>
+
+Recovery Stake: <b>${fmt(m.calc.R)}</b><br>
+BackBet Stake: <b>${fmt(m.calc.B)}</b><br>
+
+Expected Profit: <b>${fmt(m.calc.profitIfWin)}</b>
 
 </div>
 `;
 
+});
+
+html+=`
+<div class="resultStats">
+Matches analysed: ${matches.length}<br>
+Best hedge profit: ${fmt(matches[bestIndex]?.calc.profitIfWin||0)}
+</div>
+`;
+
+document.getElementById("results").innerHTML=html;
+
 }
 
-document.getElementById("matchResults").innerHTML=output || "No odds detected.";
+function analyseHTML(){
+
+const html=document.getElementById("htmlInput").value;
+analyseText(html);
 
 }
 
+function manualCalc(){
 
+const r=parseFloat(document.getElementById("recOdd").value);
+const b=parseFloat(document.getElementById("backOdd").value);
+const p=parseFloat(document.getElementById("profit").value);
 
-function calculate(){
-
-const homeOdd=parseFloat(document.getElementById("homeOdd").value);
-const drawOdd=parseFloat(document.getElementById("drawOdd").value);
-const profit=parseFloat(document.getElementById("profit").value);
-
-let calc=hedgeCalc(homeOdd,drawOdd,profit);
-
-if(!calc){
-document.getElementById("manualResult").innerHTML="Invalid odds combination.";
-return;
-}
+let calc=hedge(r,b,p);
+if(!calc) return;
 
 document.getElementById("manualResult").innerHTML=`
-<div class="result-card">
+<div class="match">
 Recovery Stake: ${fmt(calc.R)}<br>
-BackBet Stake: ${fmt(calc.B)}
+BackBet Stake: ${fmt(calc.B)}<br>
+Expected Profit: ${fmt(calc.profitIfWin)}
 </div>
 `;
 

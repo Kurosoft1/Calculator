@@ -1,53 +1,90 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recovery & BackBet Calculator</title>
+<title>Recovery & BackBet Calculator + Screenshot Analyzer</title>
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
 <style>
 :root{
---bg:#0a0f0d;--card:#121a16;--card-border:#1e2e24;--accent:#2ecc40;
---accent-dim:#1a7a28;--accent-glow:rgba(46,204,64,0.15);
---text:#e8f0ea;--text-dim:#7a9a82;--danger:#e74c3c;--warning:#f39c12;
+--bg:#0a0f0d;
+--card:#121a16;
+--card-border:#1e2e24;
+--accent:#2ecc40;
+--accent-dim:#1a7a28;
+--text:#e8f0ea;
+--text-dim:#7a9a82;
+--warning:#f39c12;
+--danger:#e74c3c;
 --input-bg:#0d1410;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
+
 body{
-font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
-min-height:100vh;padding:20px;
+font-family:'DM Sans',sans-serif;
+background:var(--bg);
+color:var(--text);
+min-height:100vh;
+padding:20px;
 }
-.container{max-width:480px;margin:0 auto;}
-.header{text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--card-border);}
-.header h1{font-family:'Space Mono',monospace;font-size:18px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);}
-.header p{font-size:12px;color:var(--text-dim);}
-.section{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-bottom:16px;}
-.section-label{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px;}
-.input-group{margin-bottom:14px;}
-.input-row{display:flex;gap:12px;}
-input[type="number"]{
-width:100%;background:var(--input-bg);border:1px solid var(--card-border);
-border-radius:8px;padding:12px 14px;font-family:'Space Mono',monospace;
-font-size:16px;color:var(--text);outline:none;
+
+.container{
+max-width:700px;
+margin:0 auto;
 }
-.calc-btn{
-width:100%;background:var(--accent);color:var(--bg);border:none;border-radius:10px;
-padding:14px;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;
+
+.section{
+background:var(--card);
+border:1px solid var(--card-border);
+border-radius:12px;
+padding:20px;
 margin-bottom:16px;
 }
-.results{display:none;}
-.results.visible{display:block;}
-.result-card{
-background:var(--card);border:1px solid var(--card-border);
-border-radius:12px;padding:18px;margin-bottom:12px;
+
+.section-label{
+font-family:'Space Mono',monospace;
+font-size:12px;
+color:var(--text-dim);
+margin-bottom:10px;
 }
-.result-card.recovery{border-left:3px solid var(--accent);}
-.result-card.backbet{border-left:3px solid var(--warning);}
-.stake-amount{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;margin-bottom:6px;}
-.summary{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:18px;margin-bottom:12px;}
-.summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;}
-.green{color:var(--accent);} .yellow{color:var(--warning);} .red{color:var(--danger);}
+
+input[type="number"],input[type="file"]{
+width:100%;
+background:var(--input-bg);
+border:1px solid var(--card-border);
+border-radius:8px;
+padding:10px;
+color:white;
+margin-bottom:10px;
+}
+
+button{
+width:100%;
+background:var(--accent);
+border:none;
+padding:12px;
+font-weight:bold;
+border-radius:8px;
+cursor:pointer;
+}
+
+.result-card{
+border:1px solid var(--card-border);
+padding:10px;
+border-radius:8px;
+margin-top:10px;
+}
+
+.match{
+margin-bottom:15px;
+padding:10px;
+border:1px solid var(--card-border);
+border-radius:8px;
+}
+
 </style>
 </head>
 
@@ -55,73 +92,40 @@ border-radius:12px;padding:18px;margin-bottom:12px;
 
 <div class="container">
 
-<div class="header">
-<h1>Recovery + BackBet</h1>
-<p>Hedge Calculator</p>
-</div>
+<h2>Screenshot Hedge Analyzer</h2>
 
 <div class="section">
-<div class="section-label">Odds Input</div>
-<div class="input-row">
-<div class="input-group">
-<label>Home Odd (Recovery) <span style="color:#1a7a28;font-size:11px;">Any odd > 1.00</span></label>
-<input type="number" id="homeOdd" step="0.01" placeholder="2.10">
+
+<div class="section-label">Upload Football Odds Screenshot</div>
+
+<input type="file" id="imageUpload" accept="image/*">
+
+<button onclick="processScreenshot()">Analyse Screenshot</button>
+
+<div id="matchResults"></div>
+
 </div>
 
-<div class="input-group">
-<label>Draw Odd (BackBet)</label>
-<input type="number" id="drawOdd" step="0.01" placeholder="3.50">
-</div>
-</div>
-</div>
 
 <div class="section">
-<div class="section-label">Target Profit</div>
-<div class="input-group">
-<label>Desired Profit</label>
-<input type="number" id="profit" step="10" placeholder="1000">
-</div>
-</div>
 
-<button class="calc-btn" onclick="calculate()">Calculate</button>
+<div class="section-label">Manual Calculator</div>
 
-<div class="results" id="results">
+<label>Home Odd</label>
+<input type="number" id="homeOdd" step="0.01">
 
-<div class="result-card recovery">
-<div>Recovery Stake</div>
-<div class="stake-amount" id="recoveryStake">—</div>
-<div>Return: <strong id="recoveryReturn">—</strong></div>
-</div>
+<label>Draw Odd</label>
+<input type="number" id="drawOdd" step="0.01">
 
-<div class="result-card backbet">
-<div>BackBet Stake</div>
-<div class="stake-amount" id="backbetStake">—</div>
-<div>Return: <strong id="backbetReturn">—</strong></div>
-</div>
+<label>Target Profit</label>
+<input type="number" id="profit" value="1000">
 
-<div class="summary">
-<div class="summary-row">
-<span>Total Outlay</span>
-<span id="totalOutlay">—</span>
-</div>
+<button onclick="calculate()">Calculate</button>
 
-<div class="summary-row">
-<span>If Home Wins</span>
-<span class="green" id="profitHome">—</span>
-</div>
-
-<div class="summary-row">
-<span>If Draw</span>
-<span class="yellow" id="profitDraw">—</span>
-</div>
-
-<div class="summary-row">
-<span>If Away Wins</span>
-<span class="red" id="lossAway">—</span>
-</div>
-</div>
+<div id="manualResult"></div>
 
 </div>
+
 </div>
 
 <script>
@@ -130,49 +134,111 @@ function fmt(n){
 return "₦"+Math.round(n).toLocaleString();
 }
 
+function hedgeCalc(recovery,backbet,profit){
+
+let denom=(backbet-1)*(recovery-1)-1;
+
+if(denom<=0) return null;
+
+let B=profit/denom;
+let R=B*(backbet-1);
+
+return {R,B};
+
+}
+
+
+async function processScreenshot(){
+
+const file=document.getElementById("imageUpload").files[0];
+
+if(!file){
+alert("Upload screenshot first");
+return;
+}
+
+document.getElementById("matchResults").innerHTML="Reading screenshot...";
+
+const result=await Tesseract.recognize(file,"eng");
+
+const text=result.data.text;
+
+analyseOdds(text);
+
+}
+
+
+function analyseOdds(text){
+
+const numbers=text.match(/\d+\.\d+/g);
+
+let output="";
+
+let profit=1000;
+
+for(let i=0;i<numbers.length;i+=3){
+
+let odds=[
+parseFloat(numbers[i]),
+parseFloat(numbers[i+1]),
+parseFloat(numbers[i+2])
+];
+
+if(odds.length<3) continue;
+
+let sorted=[...odds].sort((a,b)=>a-b);
+
+let recovery=sorted[0];
+
+let backbet=sorted[1];
+
+let calc=hedgeCalc(recovery,backbet,profit);
+
+if(!calc) continue;
+
+output+=`
+<div class="match">
+
+<b>Odds:</b> ${odds.join(" | ")}<br>
+
+Recovery Odd (lowest): <b>${recovery}</b><br>
+BackBet Odd (second lowest): <b>${backbet}</b><br><br>
+
+Recovery Stake: <b>${fmt(calc.R)}</b><br>
+BackBet Stake: <b>${fmt(calc.B)}</b>
+
+</div>
+`;
+
+}
+
+document.getElementById("matchResults").innerHTML=output || "No odds detected.";
+
+}
+
+
+
 function calculate(){
 
 const homeOdd=parseFloat(document.getElementById("homeOdd").value);
 const drawOdd=parseFloat(document.getElementById("drawOdd").value);
 const profit=parseFloat(document.getElementById("profit").value);
 
-if(!homeOdd || !drawOdd || !profit) return;
+let calc=hedgeCalc(homeOdd,drawOdd,profit);
 
-if(homeOdd<=1 || drawOdd<=1) return;
-
-const denom=(drawOdd-1)*(homeOdd-1)-1;
-
-if(denom<=0) return;
-
-const B=profit/denom;
-const R=B*(drawOdd-1);
-
-const total=R+B;
-const recReturn=R*homeOdd;
-const backReturn=B*drawOdd;
-
-const profitHome=recReturn-total;
-const profitDraw=backReturn-total;
-const lossAway=-total;
-
-document.getElementById("recoveryStake").textContent=fmt(R);
-document.getElementById("recoveryReturn").textContent=fmt(recReturn);
-
-document.getElementById("backbetStake").textContent=fmt(B);
-document.getElementById("backbetReturn").textContent=fmt(backReturn);
-
-document.getElementById("totalOutlay").textContent=fmt(total);
-document.getElementById("profitHome").textContent="+"+fmt(profitHome);
-document.getElementById("profitDraw").textContent=fmt(profitDraw);
-document.getElementById("lossAway").textContent=fmt(lossAway);
-
-document.getElementById("results").classList.add("visible");
+if(!calc){
+document.getElementById("manualResult").innerHTML="Invalid odds combination.";
+return;
 }
 
-// AUTO CALCULATE WHILE TYPING
-document.querySelectorAll("input").forEach(input=>{
-input.addEventListener("input",calculate);
-});
+document.getElementById("manualResult").innerHTML=`
+<div class="result-card">
+Recovery Stake: ${fmt(calc.R)}<br>
+BackBet Stake: ${fmt(calc.B)}
+</div>
+`;
+
+}
 
 </script>
 

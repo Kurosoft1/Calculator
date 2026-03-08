@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recovery & BackBet Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#0a0f0d;--card:#121a16;--card-border:#1e2e24;--accent:#2ecc40;
+--accent-dim:#1a7a28;--accent-glow:rgba(46,204,64,0.15);
+--text:#e8f0ea;--text-dim:#7a9a82;--danger:#e74c3c;--warning:#f39c12;
+--input-bg:#0d1410;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+min-height:100vh;padding:20px;
+}
+.container{max-width:480px;margin:0 auto;}
+.header{text-align:center;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--card-border);}
+.header h1{font-family:'Space Mono',monospace;font-size:18px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);}
+.header p{font-size:12px;color:var(--text-dim);}
+.section{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-bottom:16px;}
+.section-label{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);margin-bottom:16px;}
+.input-group{margin-bottom:14px;}
+.input-row{display:flex;gap:12px;}
+input[type="number"]{
+width:100%;background:var(--input-bg);border:1px solid var(--card-border);
+border-radius:8px;padding:12px 14px;font-family:'Space Mono',monospace;
+font-size:16px;color:var(--text);outline:none;
+}
+.calc-btn{
+width:100%;background:var(--accent);color:var(--bg);border:none;border-radius:10px;
+padding:14px;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;
+margin-bottom:16px;
+}
+.results{display:none;}
+.results.visible{display:block;}
+.result-card{
+background:var(--card);border:1px solid var(--card-border);
+border-radius:12px;padding:18px;margin-bottom:12px;
+}
+.result-card.recovery{border-left:3px solid var(--accent);}
+.result-card.backbet{border-left:3px solid var(--warning);}
+.stake-amount{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;margin-bottom:6px;}
+.summary{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:18px;margin-bottom:12px;}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;}
+.green{color:var(--accent);} .yellow{color:var(--warning);} .red{color:var(--danger);}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<h1>Recovery + BackBet</h1>
+<p>Hedge Calculator</p>
+</div>
+
+<div class="section">
+<div class="section-label">Odds Input</div>
+<div class="input-row">
+<div class="input-group">
+<label>Home Odd (Recovery) <span style="color:#1a7a28;font-size:11px;">Any odd > 1.00</span></label>
+<input type="number" id="homeOdd" step="0.01" placeholder="2.10">
+</div>
+
+<div class="input-group">
+<label>Draw Odd (BackBet)</label>
+<input type="number" id="drawOdd" step="0.01" placeholder="3.50">
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-label">Target Profit</div>
+<div class="input-group">
+<label>Desired Profit</label>
+<input type="number" id="profit" step="10" placeholder="1000">
+</div>
+</div>
+
+<button class="calc-btn" onclick="calculate()">Calculate</button>
+
+<div class="results" id="results">
+
+<div class="result-card recovery">
+<div>Recovery Stake</div>
+<div class="stake-amount" id="recoveryStake">—</div>
+<div>Return: <strong id="recoveryReturn">—</strong></div>
+</div>
+
+<div class="result-card backbet">
+<div>BackBet Stake</div>
+<div class="stake-amount" id="backbetStake">—</div>
+<div>Return: <strong id="backbetReturn">—</strong></div>
+</div>
+
+<div class="summary">
+<div class="summary-row">
+<span>Total Outlay</span>
+<span id="totalOutlay">—</span>
+</div>
+
+<div class="summary-row">
+<span>If Home Wins</span>
+<span class="green" id="profitHome">—</span>
+</div>
+
+<div class="summary-row">
+<span>If Draw</span>
+<span class="yellow" id="profitDraw">—</span>
+</div>
+
+<div class="summary-row">
+<span>If Away Wins</span>
+<span class="red" id="lossAway">—</span>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+function fmt(n){
+return "₦"+Math.round(n).toLocaleString();
+}
+
+function calculate(){
+
+const homeOdd=parseFloat(document.getElementById("homeOdd").value);
+const drawOdd=parseFloat(document.getElementById("drawOdd").value);
+const profit=parseFloat(document.getElementById("profit").value);
+
+if(!homeOdd || !drawOdd || !profit) return;
+
+if(homeOdd<=1 || drawOdd<=1) return;
+
+const denom=(drawOdd-1)*(homeOdd-1)-1;
+
+if(denom<=0) return;
+
+const B=profit/denom;
+const R=B*(drawOdd-1);
+
+const total=R+B;
+const recReturn=R*homeOdd;
+const backReturn=B*drawOdd;
+
+const profitHome=recReturn-total;
+const profitDraw=backReturn-total;
+const lossAway=-total;
+
+document.getElementById("recoveryStake").textContent=fmt(R);
+document.getElementById("recoveryReturn").textContent=fmt(recReturn);
+
+document.getElementById("backbetStake").textContent=fmt(B);
+document.getElementById("backbetReturn").textContent=fmt(backReturn);
+
+document.getElementById("totalOutlay").textContent=fmt(total);
+document.getElementById("profitHome").textContent="+"+fmt(profitHome);
+document.getElementById("profitDraw").textContent=fmt(profitDraw);
+document.getElementById("lossAway").textContent=fmt(lossAway);
+
+document.getElementById("results").classList.add("visible");
+}
+
+// AUTO CALCULATE WHILE TYPING
+document.querySelectorAll("input").forEach(input=>{
+input.addEventListener("input",calculate);
+});
+
+</script>
+
+</body>
+</html>
